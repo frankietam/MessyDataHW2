@@ -1,0 +1,27 @@
+---
+title: "naive_bayes"
+author: "Yeonji Jung, Frankie Tam, Ofer Chen"
+date: "10/4/2018"
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+
+```
+
+## Including Plots
+
+
+
+```{r}
+
+```
+
+
