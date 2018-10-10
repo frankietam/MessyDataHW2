@@ -65,6 +65,7 @@ vote_probs[1:10]
 #Check representation of 0 and 1 value
 contrasts(exit_poll$candidate)
 ```
+
 ```{r}
 vote_pred=rep("barack obama", 5113)
 vote_pred[vote_probs>.5]="john mcCain"
@@ -112,7 +113,51 @@ Accuracy goes up from 0.8558 to 0.8595. Precision for predicting vote for obama 
 
 ## Part C
 
+## Question 1.C.i
+
 ```{r}
+#pulling full poll data file
+poll_data_full <- read.delim("poll_data_full.tsv")
+#creating a major party boolean variable
+poll_data_full <- mutate(poll_data_full, major_party= if_else(poll_data_full$vote_2008 %in% c("john mcCain","barack obama"),1,0))
+#Creating a logistic regression on likelihood to vote for a major party candidate 
+myvote_full <- glm(major_party ~ state + sex + race + age + education + party + ideology + state_contestedness, data = poll_data_full, family = "binomial")
+#Using the model to predict the probabilities for major party votes
+major_prediction <- predict(myvote_full, type = 'response')
+summary(major_prediction)
+#Plotting major party votes on a histogram
+hist(major_prediction, xlab = "Probability of voting for a major party candidate", main = "Histogram of probability of voting for a major party candidate", breaks = 200)
+```
+## Question 1.C.ii
+
+```{r}
+#Filtering revised exit poll data to major party voters
+poll_data_filtered <- poll_data_full %>% filter(poll_data_full$major_party==1) %>% select(-major_party)
+# creating a Boolean variable for voting Obama
+poll_data_filtered$obama_vote <- poll_data_filtered$vote_2008=="barack obama"
+#Logistic regression over chances to vote McCain -- by some default McCain is 1 and Obama is 0
+obama_model <- glm(obama_vote ~ state + sex + race + age + education + party + ideology + state_contestedness, data =poll_data_filtered, family = "binomial")
+```
+
+#question 1.C.iii
+```{r}
+#Creating the prediction
+poll_data_filtered$obama_prediction <- predict(obama_model,type = 'response')
+#PLotting
+hist(poll_data_filtered$obama_prediction, xlab = "P(obama|major_party)", main = "Histogram of P(obama|major_party)", breaks = 200)
+
 
 ```
+
+#question 1.C.iv
+```{r}
+# creating the relevant prediction variables
+poll_data_full$pred_other_prob <- 1-major_prediction
+poll_data_full$pred_obama_prob <- predict(obama_model,poll_data_full, type = 'response')
+poll_data_full$pred_mccain_prob <- 1-poll_data_full$pred_other_prob-poll_data_full$pred_obama_prob
+poll_data_full$pred_mccain_prob <- if_else(poll_data_full$pred_mccain_prob<0, 0, poll_data_full$pred_mccain_prob)
+
+#Creating categorical predictions
+```
+
 
