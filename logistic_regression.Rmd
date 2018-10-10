@@ -11,6 +11,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Question 1 
 
 ```{r}
 #Loading relevant libraries
@@ -20,20 +21,110 @@ library(aod)
 ```
 
 ```{r}
+#Reading data
 exit_poll <- read.table("poll_data.tsv", header=TRUE, sep="\t")
 exit_poll <- as.tibble(exit_poll)
+dim(exit_poll)
+```
+## Part B
+```{r}
+#Perform logistic regression
+exit_poll <- exit_poll %>% mutate(candidate = as.factor(vote_2008)) %>% select(-vote_2008) %>% slice(sample(1:n()))
+
+vote_model <- glm(candidate ~ state + sex + race + age + education + party + ideology + state_contestedness, data = exit_poll, family = "binomial")
+str(vote_model)
+
+```
+```{r}
+#Examine model
+summary(vote_model)
+```
+```{r}
+#Examine coefficients
+coef(vote_model)
 
 ```
 
 ```{r}
-exit_poll <- exit_poll %>% mutate(candidate = as.factor(vote_2008)) %>% select(-vote_2008) %>% slice(sample(1:n()))
-
-myvote <- glm(candidate ~ state + sex + race + age + education + party + ideology + state_contestedness, data = exit_poll, family = "binomial")
-str(myvote)
-summary(myvote)$coef
+#Examine p values
+summary(vote_model)$coef[,4]
 ```
 
-## Including Plots
+
+### i) 
+Coefficients for each age group and gender
+sexmale 0.110641975
+age30-44 0.412772219
+age45-64 0.482475702
+age65+ 0.513219788
+       
+since sex and age are categorical variables, sex-female and age18-29 are being used as reference category for their respective variables. This is the reason for sex-female and age18-29 aren't being shown in the model explicitly.
+
+### ii)
+
+```{r}
+with(vote_model, null.deviance - deviance)
+with(vote_model, df.null-df.residual)
+with(vote_model, pchisq(null.deviance- deviance, df.null-df.residual, lower.tail=FALSE))
+```
+According to p-value of the variables, sexmale is 0.22, it implies there is no statistically significant relationship between sex and voting preference. On the other hand, p-value of age variables are 0.003, 0.0003 and 0.001 imply there is a statistically significant relationship between age and voting preference.
+
+### iii)
+```{r}
+#Run prediction
+vote_probs=predict(vote_model,type="response")
+vote_probs[1:10]
+#Check representation of 0 and 1 value
+contrasts(exit_poll$candidate)
+```
+```{r}
+vote_pred=rep("barack obama", 5113)
+vote_pred[vote_probs>.5]="john mcCain"
+vote_pred_table <- table(vote_pred, exit_poll$candidate)
+vote_pred_table
+```
+
+```{r}
+#Compute accuracy
+mean(vote_pred==exit_poll$candidate)
+accuracy <- sum(diag(vote_pred_table))/sum(vote_pred_table)
+#Compute precision
+# TP/(TP+FP)
+precision <- diag(vote_pred_table)/colSums(vote_pred_table)
+#Compute recall
+# TP/(TP+FN)
+recall <- diag(vote_pred_table)/rowSums(vote_pred_table)
+
+accuracy
+data.frame(precision, recall)
+```
+
+
+### iv)
+```{r}
+vote_pred_t70=rep("john mcCain", 5113)
+vote_pred_t70[(1-vote_probs)>.7]="barack obama"
+vote_pred_table_t70 <- table(vote_pred_t70, exit_poll$candidate)
+vote_pred_table_t70
+```
+```{r}
+#Compute accuracy
+mean(vote_pred_t70==exit_poll$candidate)
+accuracy_t70 <- sum(diag(vote_pred_table_t70))/sum(vote_pred_table_t70)
+#Compute precision
+# TP/(TP+FP)
+precision_t70 <- diag(vote_pred_table_t70)/colSums(vote_pred_table_t70)
+#Compute recall
+# TP/(TP+FN)
+recall_t70 <- diag(vote_pred_table_t70)/rowSums(vote_pred_table_t70)
+
+accuracy_t70
+data.frame(precision_t70, recall_t70)
+```
+
+Accuracy went down from 0.869 to 0.84. Precision for predicting vote for obama went down from 0.9 to 0.785 while recall went up from 0.87 to 0.92. On the other hand, precision for predicting vote for mcCain went up from 0.82 to 0.91 and recall went down from 0.865 to 0.76.
+
+## Part C
 
 ```{r}
 
