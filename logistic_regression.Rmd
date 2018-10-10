@@ -22,52 +22,40 @@ library(aod)
 
 ```{r}
 #Reading data
-exit_poll <- read.table("poll_data.tsv", header=TRUE, sep="\t")
+exit_poll <- read_tsv("poll_data.tsv")
 exit_poll <- as.tibble(exit_poll)
 dim(exit_poll)
 ```
 ## Part B
 ```{r}
-#Perform logistic regression
+#Rename vote_2008 to candidate and convert to factor
 exit_poll <- exit_poll %>% mutate(candidate = as.factor(vote_2008)) %>% select(-vote_2008) %>% slice(sample(1:n()))
 
-vote_model <- glm(candidate ~ state + sex + race + age + education + party + ideology + state_contestedness, data = exit_poll, family = "binomial")
-str(vote_model)
+#Perform logistic regression
+vote_model <- glm(candidate ~ state + sex + race + age + education + party + ideology + state_contestedness, family = "binomial", data = exit_poll)
 
+#str(vote_model)
 ```
+
 ```{r}
 #Examine model
 summary(vote_model)
 ```
-```{r}
-#Examine coefficients
-coef(vote_model)
-
-```
-
-```{r}
-#Examine p values
-summary(vote_model)$coef[,4]
-```
-
 
 ### i) 
 Coefficients for each age group and gender
-sexmale 0.110641975
-age30-44 0.412772219
-age45-64 0.482475702
-age65+ 0.513219788
+sexmale 0.0232138
+age30-44 0.3452590
+age45-64 0.4093395
+age65+ 0.3464339
        
-since sex and age are categorical variables, sex-female and age18-29 are being used as reference category for their respective variables. This is the reason for sex-female and age18-29 aren't being shown in the model explicitly.
+since sex and age are categorical variables, sex-female and age18-29 are being used as reference category for their respective variables. This is the reason for sexfemale and age18-29 are not being shown in the model explicitly.
 
 ### ii)
 
-```{r}
-with(vote_model, null.deviance - deviance)
-with(vote_model, df.null-df.residual)
-with(vote_model, pchisq(null.deviance- deviance, df.null-df.residual, lower.tail=FALSE))
-```
-According to p-value of the variables, sexmale is 0.22, it implies there is no statistically significant relationship between sex and voting preference. On the other hand, p-value of age variables are 0.003, 0.0003 and 0.001 imply there is a statistically significant relationship between age and voting preference.
+According to p-value of the variables, sexmale is 0.709 and it is not statistically significant. On the other hand, p-value of age variables are 0.0003, 7.33e-06 and 0.0021. They are statistically significant. According to the coefficients, it indicates when comparing voters in age30-44 bracket to age 18-29, the odds of voting for mcCain increase by a factor of 0.345. When comparing voters in age45-64 bracket to age 18-29, the odds of voting for mcCain increase by a factor of 0.409. Lastly, when comparing voters in age65+ bracket to age 18-29, the odds of voting for mcCain increase by a factor of 0.346.
+
+Other than age, race, ideology, party, education except didn't graduate from high school and six particular states are also statistically significant.
 
 ### iii)
 ```{r}
@@ -86,7 +74,6 @@ vote_pred_table
 
 ```{r}
 #Compute accuracy
-mean(vote_pred==exit_poll$candidate)
 accuracy <- sum(diag(vote_pred_table))/sum(vote_pred_table)
 #Compute precision
 # TP/(TP+FP)
@@ -109,7 +96,6 @@ vote_pred_table_t70
 ```
 ```{r}
 #Compute accuracy
-mean(vote_pred_t70==exit_poll$candidate)
 accuracy_t70 <- sum(diag(vote_pred_table_t70))/sum(vote_pred_table_t70)
 #Compute precision
 # TP/(TP+FP)
@@ -122,7 +108,7 @@ accuracy_t70
 data.frame(precision_t70, recall_t70)
 ```
 
-Accuracy went down from 0.869 to 0.84. Precision for predicting vote for obama went down from 0.9 to 0.785 while recall went up from 0.87 to 0.92. On the other hand, precision for predicting vote for mcCain went up from 0.82 to 0.91 and recall went down from 0.865 to 0.76.
+Accuracy goes up from 0.8558 to 0.8595. Precision for predicting vote for obama goes up from 0.814 to 0.872 while recall also goes up from 0.86 to 0.92. On the other hand, precision for predicting vote for mcCain goes down from 0.89 to 0.82 and recall goes down from 0.85 to 0.73.
 
 ## Part C
 
