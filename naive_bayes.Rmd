@@ -30,12 +30,13 @@ trump_test <- as.tibble(trump_test)
 
 #B) Clean and organize the data
 
-We'd like to use @, #, !, "thank you" as the feature. 
+We'd like to use @, #, !, "thank you", "I" as the feature. 
 Trump uses "I" and @ in his tweets more often than his staff while his staff use # more often than Trump. 
 Likewise, his staff uses ! and "thank you" more often than Trump. 
 We also hope to look at the timing of the day the tweet was posted 
 as a two cateogry of either morning (5am to 10am) or early afternoon (10am to 5pm).
-This is based on what David Robinsonhe showed with the analysis of the hour of the day 
+This is based on what David Robinsonhe showed with the analysis of the hour of the day
+
 To sum up: @, #, !, "thank you", "I", timing of the day the post was written at.
 
 ```{r}
