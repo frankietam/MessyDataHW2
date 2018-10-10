@@ -1,24 +1,21 @@
----
-title: "trump_classifier"
-author: "Yeonji Jung, Frankie Tam, Ofer Chen"
-date: "10/4/2018"
-output:
-  pdf_document:
-    latex_engine: xelatex
----
+###################################################
+### MD_ML HW2 
+###
+### Trump_classifier
+### Yeonji Jung, Frankie Tam, Ofer Chen
+############################################
 
-#A) Load libraries and trump data
-```{r}
-#load relevant libraries
+############################################
+#A) load libraries and trump data
+
+##loading relevant libraries
 library(tidyverse)
 library(lubridate)
 library(plyr)
 library(dplyr)
 library(naivebayes)
-```
 
-```{r}
-#load the data
+##loading the data
 trump <- read.table("trump_data.tsv", header=F, sep="\t", col.names = c("actual","time","post"))
 trump <- as.tibble(trump)
 trump$time <- as.character(as.character(trump$time))
@@ -26,27 +23,27 @@ trump$post <- as.character(as.character(trump$post))
 
 trump_test <- read.table("trump_hidden_test_set.tsv", header=F, sep="\t", col.names = c("actual","time","post"))
 trump_test <- as.tibble(trump_test)
-```
 
+############################################
 #B) Clean and organize the data
 
-We'd like to use @, #, !, "thank you", "I" as the feature. 
-Trump uses "I" and @ in his tweets more often than his staff while his staff use # more often than Trump. 
-Likewise, his staff uses ! and "thank you" more often than Trump. 
-We also hope to look at the timing of the day the tweet was posted 
-as a two cateogry of either morning (5am to 10am) or early afternoon (10am to 5pm).
-This is based on what David Robinsonhe showed with the analysis of the hour of the day
+##determine features to use
+##! We'd like to use @, #, !, "thank you" as the feature. 
+##! Trump uses "I" and @ in his tweets more often than his staff while his staff use # more often than Trump. 
+##! Likewise, his staff uses ! and "thank you" more often than Trump. 
+##! We also hope to look at the timing of the day the tweet was posted 
+##! as a two cateogry of either morning (5am to 10am) or early afternoon (10am to 5pm).
+##! This is based on what David Robinsonhe showed with the analysis of the hour of the day 
 
-To sum up: @, #, !, "thank you", "I", timing of the day the post was written at.
+##! To sum up: @, #, !, "thank you", "I",  the hour of the day.
 
-```{r}
-#clean the missing data which does not have any content of the post
+##clean the missing data which does not have any content of the post
 trump<- filter(trump, !trump$post == "")
 
-#make all of letters lowercase
+##make all of letters lowercase
 trump$post <- tolower(trump$post)
 
-#add the column of timing and limit the data written during 5am to 5pm to fulfill our interest
+##add the column of timing and limit the data written during 5am to 5pm to fulfill our interest
 trump$time <- ymd_hms(trump$time, quiet = T, tz="EST")
 trump <- trump %>%
   mutate(hour=format(as.POSIXct(trump$time, format="%Y-%m-%d %H:%M"), format="%H") )
@@ -57,10 +54,8 @@ trump <- trump %>%
   mutate(timing= between(hour, 5, 9)+1L) 
 trump$timing <- as.factor(as.integer(trump$timing))
 levels(trump$timing) <- c("afternoon", "morning")
-```
 
-```{r}
-#add the column of whether each feature occurs in the post or not
+##add the column of whether each feature occurs in the post or not
 trump$at <- 
   (1:nrow(trump) %in% c(sapply("@", grep, trump$post, fixed = TRUE)))+0
 trump$hash <- 
@@ -71,7 +66,7 @@ trump$thx <-
   (1:nrow(trump) %in% c(sapply("thank you", grep, trump$post, fixed = TRUE)))+0
 trump$self <- 
   (1:nrow(trump) %in% c(sapply("i ", grep, trump$post, fixed = TRUE)))+0
-
+  
 #choose only necessary columns 
 trump_clean <- select(trump, actual, timing, at, hash, excl, thx, self)
 
@@ -80,36 +75,28 @@ trump_clean$hash<-as.factor(as.numeric(trump_clean$hash))
 trump_clean$excl<-as.factor(as.numeric(trump_clean$excl))
 trump_clean$thx<-as.factor(as.numeric(trump_clean$thx))
 trump_clean$self<- as.factor(as.numeric(trump_clean$self))
-```
 
+############################################
 #C) Divide data into a training set and a test set
-```{r}
-#create a training set (80% of data) and test set (20% of data) 
+
+##create a training set (80% of data) and test set (20% of data) 
 index <- sample(2,nrow(trump_clean), replace=TRUE, prob=c(0.8,0.2))
 trainData <- trump_clean[index==1,]
 testData <- trump_clean[index==2,]
 
-#implement the Naive Bayes classifier (trials)
-trainClass3 <- naive_bayes(actual ~ timing+at+hash+excl+thx+self, data = trainData, prior = NULL)
-trainClass2 <- naive_bayes(actual ~ timing+at+hash+thx+self, data = trainData, prior = NULL)
-trainClass <- naive_bayes(actual ~ timing+at+thx+self, data = trainData, prior = NULL)
-```
+##implement the Naive Bayes classifier
+trainClass <- naive_bayes(actual ~ timing+at+hash+thx+self, data = trainData, prior = NULL)
 
+############################################
 #D) Select a single model and save the options we used
 
-After a series of trials, we decided to select a single model which consists of the predictors of timing, at, "thank you", "I". We decided to use this model due to the lower predictiability of hash and exclamatioon. We also decided to set laplace as a default value based on the results of our trials.
-
-```{r}
-#fit the model on the training data
+##fit the model on the training data
 trainClass
 
-#apply the fitted model to generate predictions on the test dataset
+##apply the fitted model to generate predictions on the test dataset
 testPredict <- predict(trainClass, testData, type="class")
-testData$prediction <- testPredict
-```
 
-```{r}
-#evaluate the model 
+##evaluate the model 
 cm <- as.matrix(table(actual = testData$actual, prediction = testData$prediction))
 n = sum(cm) # number of instances
 nc = nrow(cm) # number of classes
@@ -122,17 +109,15 @@ accuracy = sum(diag) / n
 precision = diag / colsums 
 recall = diag / rowsums 
 f1 = 2 * precision * recall / (precision + recall) 
-eval <- data.frame(accuracy, precision, recall) 
-```
+eval <- data.frame(precision, recall, f1) 
 
-To conduct a brief evaluation of our model, we tried to calculate the accuracy, precision, recall. For our understanding, this model seems to have a quite good prediction despite of a poor recall on staff. 
+##save the predictions as a csv file
+testData$prediction <- testPredict
 
-```{r}
-#save the predictions as a csv file
 finaloutput <- select(testData, actual, prediction) %>%
   mutate(actual = mapvalues(actual, from=c("Staff", "Trump"), to=c("0", "1"))) %>%
   mutate(prediction = mapvalues(prediction, from=c("Staff", "Trump"), to=c("0", "1")))
 
 write.csv(finaloutput, file="predictions.csv")
-```
+
 
