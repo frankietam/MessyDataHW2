@@ -145,18 +145,22 @@ obama_model <- glm(obama_vote ~ state + sex + race + age + education + party + i
 poll_data_filtered$obama_prediction <- predict(obama_model,type = 'response')
 #PLotting
 hist(poll_data_filtered$obama_prediction, xlab = "P(obama|major_party)", main = "Histogram of P(obama|major_party)", breaks = 200)
-
-
 ```
 
 #question 1.C.iv
 ```{r}
 # creating the relevant prediction variables
 poll_data_full$pred_other_prob <- 1-major_prediction
+# Using Bayes law to calculate the probability of voting for a specific candidate given a vote to a major party
+#caluculating the prediction of voting for Obama or mccain (not given major party)
 poll_data_full$pred_obama_prob <- predict(obama_model,poll_data_full, type = 'response')
-poll_data_full$pred_mccain_prob <- 1-poll_data_full$pred_other_prob-poll_data_full$pred_obama_prob
-poll_data_full$pred_mccain_prob <- if_else(poll_data_full$pred_mccain_prob<0, 0, poll_data_full$pred_mccain_prob)
-
+poll_data_full$pred_mccain_prob <- (1-poll_data_full$pred_obama_prob)
+#using Bayes law when p(major|obama) = 1
+poll_data_full$pred_obama_prob <- poll_data_full$pred_obama_prob*(major_prediction)
+#using Bayes law when p(major|mccain) = 1
+poll_data_full$pred_mccain_prob <- (poll_data_full$pred_mccain_prob)*(major_prediction)
+#checking that all chances sum up to 1 in each row
+poll_data_full <- mutate(poll_data_full,sum_chance = pred_other_prob+pred_obama_prob+pred_mccain_prob)
 #Creating categorical predictions
 ```
 
