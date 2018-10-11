@@ -18,6 +18,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(lubridate)
 library(aod)
+library(caret)
 ```
 
 ```{r}
@@ -163,7 +164,9 @@ poll_data_full$pred_obama_prob <- poll_data_full$pred_obama_prob*(major_predicti
 poll_data_full$pred_mccain_prob <- (poll_data_full$pred_mccain_prob)*(major_prediction)
 #checking that all chances sum up to 1 in each row
 poll_data_full <- mutate(poll_data_full,sum_chance = pred_other_prob+pred_obama_prob+pred_mccain_prob)
-#Creating categorical predictions
+#Creating categorical predictions acoording to maximum likelyhood of choosing a candidate
+poll_data_full$predicted_vote <- if_else(poll_data_full$pred_mccain_prob>poll_data_full$pred_obama_prob,"john mcCain",if_else(poll_data_full$pred_obama_prob>poll_data_full$pred_other_prob,"barack obama","other")) 
+
+confusionMatrix(poll_data_full$predicted_vote,poll_data_full$vote_2008)
 ```
-
-
+The accuracy of the classifier is 84.15%
