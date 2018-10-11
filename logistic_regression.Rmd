@@ -113,7 +113,7 @@ Accuracy goes up from 0.8558 to 0.8595. Precision for predicting vote for obama 
 
 ## Part C
 
-## Question 1.C.i
+### i)
 
 ```{r}
 #pulling full poll data file
@@ -128,7 +128,7 @@ summary(major_prediction)
 #Plotting major party votes on a histogram
 hist(major_prediction, xlab = "Probability of voting for a major party candidate", main = "Histogram of probability of voting for a major party candidate", breaks = 200)
 ```
-## Question 1.C.ii
+### ii)
 
 ```{r}
 #Filtering revised exit poll data to major party voters
@@ -139,7 +139,8 @@ poll_data_filtered$obama_vote <- poll_data_filtered$vote_2008=="barack obama"
 obama_model <- glm(obama_vote ~ state + sex + race + age + education + party + ideology + state_contestedness, data =poll_data_filtered, family = "binomial")
 ```
 
-#question 1.C.iii
+### iii)
+
 ```{r}
 #Creating the prediction
 poll_data_filtered$obama_prediction <- predict(obama_model,type = 'response')
@@ -147,7 +148,8 @@ poll_data_filtered$obama_prediction <- predict(obama_model,type = 'response')
 hist(poll_data_filtered$obama_prediction, xlab = "P(obama|major_party)", main = "Histogram of P(obama|major_party)", breaks = 200)
 ```
 
-#question 1.C.iv
+### iv)
+
 ```{r}
 # creating the relevant prediction variables
 poll_data_full$pred_other_prob <- 1-major_prediction
