@@ -7,7 +7,9 @@ output:
     latex_engine: xelatex
 ---
 
-#A) Load libraries and trump data
+# Question 2 
+
+## Part A
 ```{r}
 #load relevant libraries
 library(tidyverse)
@@ -28,7 +30,7 @@ trump_test <- read.table("trump_hidden_test_set.tsv", header=F, sep="\t", col.na
 trump_test <- as.tibble(trump_test)
 ```
 
-#B) Clean and organize the data
+## Part B
 
 We'd like to use @, #, !, "thank you", "I" as the feature. 
 Trump uses "I" and @ in his tweets more often than his staff while his staff use # more often than Trump. 
@@ -82,7 +84,7 @@ trump_clean$thx<-as.factor(as.numeric(trump_clean$thx))
 trump_clean$self<- as.factor(as.numeric(trump_clean$self))
 ```
 
-#C) Divide data into a training set and a test set
+## Part C
 ```{r}
 #create a training set (80% of data) and test set (20% of data) 
 index <- sample(2,nrow(trump_clean), replace=TRUE, prob=c(0.8,0.2))
@@ -95,7 +97,7 @@ trainClass2 <- naive_bayes(actual ~ timing+at+hash+thx+self, data = trainData, p
 trainClass <- naive_bayes(actual ~ timing+at+thx+self, data = trainData, prior = NULL)
 ```
 
-#D) Select a single model and save the options we used
+## Part D
 
 After a series of trials, we decided to select a single model which consists of the predictors of timing, at, "thank you", "I". We decided to use this model due to the lower predictiability of hash and exclamatioon. We also decided to set laplace as a default value based on the results of our trials.
 
